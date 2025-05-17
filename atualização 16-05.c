@@ -40,12 +40,30 @@ permitindo a continuidade do controle financeiro. (  )
 #include <unistd.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
+
+#define MAX_TRANSACOES 1000
 
 enum Idioma {
     PORTUGUES,  
     FRANCES,    
     INGLES      
 };
+
+typedef struct {
+    int dia;
+    int mes;
+    int ano;
+    int valor;
+    char tipo[10]; // "RECEITA" ou "DESPESA"
+    char descricao[100];
+    int categoria;
+} Transacao;
+
+Transacao transacoes[MAX_TRANSACOES];
+int total_transacoes = 0;
+
+
 // Rol de funções (consultar declaração de cada uma delas no rodapé): 
 void limparTela();
 void exibirMenu(const char* titulo, const char* opcoes[], int num_opcoes);
@@ -59,11 +77,10 @@ void french();
 void english();
 
 int categoria = 0, option = 0, opcao = 0, transacao = 0, receita_total = 0, despesa_total = 0;
+int subOpcao = 0;
 int num_opcoes = 6;
-int subOpcao = 1;
-
-int main() {
-    const char* titulo = "Bem-vindo a sua CARTEIRA DIGITAL em Canadian Dollar.\nMenu Principal\nEscolha a opcao desejada:";
+int main() { /********************************[ INICIO DO MAIN ]***********************************************************************/
+    const char* titulo = "Bem-vindo, Carlos\nEssa eh a sua CARTEIRA DIGITAL em Canadian Dollar.\n \t \t Menu Principal\n \t Escolha a opcao desejada:";
     const char* opcoes[] = {
         "Cadastrar Receita",
         "Cadastrar Despesa",
@@ -75,34 +92,43 @@ int main() {
     do {
         exibirMenu(titulo, opcoes, num_opcoes);
         // Solicita a escolha do usuário
-        printf("\nEscolha uma opcao: ");
+        printf("\nQual opçao voce deseja?: ");
         scanf("%d", &opcao);
-
         switch(opcao) {
-        case 1:
-/*O sistema deve permitir o registro de transações financeiras, com as seguintes informações:
-                ■ Data da transação (dia, mês, ano)
-                ■ Tipo de transação (receita ou despesa)
-                ■ Valor da transação
-                ■ Descrição (opcional, para detalhar a transação)
-                ■ Categorias*/
-                // Cadastrar Receita
-                subOpcao = 1;
-            opcao = 0;
+        case 1: /*_______________________________________(Cadastrar Receita) _______________________________________*/
+            /*O sistema deve permitir o registro de transações financeiras, com as seguintes informações:
+            ■ Data da transação (dia, mês, ano)
+            ■ Tipo de transação (receita ou despesa)
+            ■ Valor da transação
+            ■ Descrição (opcional, para detalhar a transação)
+            ■ Categorias*/
+            // Cadastrar Receita
+                subOpcao = 1;            
             while (subOpcao != 2) {
                 limparTela();
                 printf("+_+== CARTEIRA DIGITAL ==+_+_\n");
-                
                 // ler o valor ou não
                 int a = lerValor("RECEITA", PORTUGUES);
-                if (a == -1) {
-                    break; // volta para o menu principal
-                }
-
-
-                // Título da categoria de despesas
-                const char* titulo = "E qual eh a categoria da receita? \n";
+                if (a == -1) break; // volta para o menu principal
                 
+                
+                if(total_transacoes >= MAX_TRANSACOES) {
+                printf("Voce ja atingiu o limite de transações, Carlos!\n");
+                break;
+            }
+                int dia, mes, ano;
+                printf("Digite o dia da transacao (DD): ");
+                scanf("%d", &dia);
+                printf("Digite o mes da transacao (MM): ");
+                scanf("%d", &mes);
+                printf("Digite o ano da transacao (YYYY): ");
+                scanf("%d", &ano);
+                char descricao[100];
+                printf("Digite a descricao da transacao(opcional): ");
+                scanf(" %[^\n]", descricao);
+
+                // Título da categoria de receitas
+                const char* titulo = "Qual a categoria da receita? \n";
                 // Opções de categoria
                 const char* option [] = {
                     "BOLSA DE ESTUDOS",
@@ -110,7 +136,7 @@ int main() {
                     "MESADA DA MAMAE (ja convertido em CAD)",
                     "FREELANCE",
                     "OUTROS"
-                };
+                };             
                 int num_opcoes = 5; // Número de categorias
                 // Registrar a transação de despesa
                 exibirTransacao(a, &receita_total,"RECEITA", PORTUGUES);
@@ -118,17 +144,13 @@ int main() {
                 categoria = entradaSaida(titulo, option, num_opcoes);  
                 // Verificar se a categoria é válida e exibir saldo da despesa
                 if (categoria >= 1 && categoria <= 6) {
-                    printf("\nSua conta atual possui X RECEITA no montante de %i.%02i CAD \ncadastradas na categoria %i\n", receita_total / 100, receita_total % 100, categoria);
+                    printf("\nSua conta atual possui um montante de %i.%02i CAD \n", receita_total / 100, receita_total % 100, categoria);
                     printf("  \n");
-                } else {
-                    printf("Opcao invalida!\n");
-                }
-        
+                } else printf("Opcao invalida!\n");
                 // Pergunta ao usuário se ele quer continuar ou sair
                 subOpcao = lerEscolha(PORTUGUES);
-            }
-            break;
-        case 2:
+            } break;
+        case 2: /*_______________________________________(Cadastrar Despesa) _______________________________________*/
             /*O sistema deve permitir o registro de transações financeiras, com as seguintes informações:
             ■ Data da transação (dia, mês, ano)
             ■ Tipo de transação (receita ou despesa)
@@ -136,16 +158,29 @@ int main() {
             ■ Descrição (opcional, para detalhar a transação)
             ■ Categorias*/
             subOpcao = 1;
-            opcao = 0;
             while (subOpcao != 2) {
                 limparTela();
                 printf("+_+== CARTEIRA DIGITAL ==+_+_\n");
-                int a = lerValor("RECEITA", PORTUGUES);
-                if (a == -1) {
-                    break; // volta para o menu principal
-                }
+                // ler o valor ou não
+                int a = lerValor("DESPESA", PORTUGUES);
+                if (a == -1) break; // volta para o menu principal
                 // Título da categoria de despesas
-                const char* titulo = "E qual eh a categoria da despesa? \n";
+
+            if(total_transacoes >= MAX_TRANSACOES) {
+                printf("Voce ja atingiu o limite de transações, Carlos!\n");
+                break;
+            }
+                int dia, mes, ano;
+                printf("Digite o dia da transacao (DD): ");
+                scanf("%d", &dia);
+                printf("Digite o mes da transacao (MM): ");
+                scanf("%d", &mes);
+                printf("Digite o ano da transacao (YYYY): ");
+                scanf("%d", &ano);
+                char descricao[100];
+                printf("Digite a descricao da transacao(opcional): ");
+                scanf(" %[^\n]", descricao);
+                const char* titulo = "Qual a categoria da despesa? \n";
                 // Opções de categoria
                 const char* option [] = {
                     "ALIMENTACAO RESTAURANT FRANCES",
@@ -155,25 +190,31 @@ int main() {
                     "BOATE",
                     "OUTROS"
                 };
-                int num_opcoes = 7; // Número de categorias
+                int num_opcoes = 6; // Número de categorias
+                Transacao t;
+                t.dia = dia;
+                t.mes = mes;
+                t.ano = ano;
+                t.valor = a;
+                strcpy(t.tipo, "DESPESA");
+                t.categoria = categoria;
+                strcpy(t.descricao, descricao);
+
+                transacoes[total_transacoes++] = t;
+
                 // Registrar a transação de despesa
                 exibirTransacao(a, &despesa_total, "DESPESA", PORTUGUES);
                 // Ler a categoria de despesa
                 categoria = entradaSaida(titulo, option, num_opcoes);  
                 // Verificar se a categoria é válida e exibir saldo da despesa
-                if (categoria >= 1 && categoria <= num_opcoes) {
-                    printf("\nSua conta atual possui X DESPESAS no montante de %i.%02i CAD \ncadastradas na categoria %i\n", despesa_total / 100, despesa_total % 100, categoria);
+                if (categoria >= 1 && categoria <= 6) {
+                    printf("\nSua conta atual possui um montante de %i.%02i CAD \n", despesa_total / 100, despesa_total % 100, categoria);
                     printf("  \n");
-                } else {
-                    printf("Opcao invalida!\n");
-                }
-                 // Pergunta ao usuário se ele quer continuar ou sair
-                subOpcao = lerEscolha(PORTUGUES);
-                
-            }
-            break;
-    
-        case 3:
+                } else printf("Opcao invalida!\n");                    
+                // Pergunta ao usuário se ele quer continuar ou sair
+                subOpcao = lerEscolha(PORTUGUES);            
+            } break;    
+        case 3: /*_______________________________________(Exibir Saldo) _______________________________________*/
             /*O sistema deve calcular o saldo atualizado a partir das transações registradas:
             ■ O saldo inicial pode ser zero ou definido pelo usuário.
             ■ As receitas aumentam o saldo e as despesas diminuem.
@@ -187,9 +228,9 @@ int main() {
             if (subOpcao == 1) {
                 char nome_meta[100];
                 int valor_meta;
-                printf("Qual eh o nome da meta?: ");
+                printf("Como essa meta deve se chamar?: ");
                 scanf(" %[^\n]", nome_meta);  // lê string com espaço
-                printf("\nE qual eh o valor da meta financeira (Ex: digite 190000 para $1900.00 CAD: ");
+                printf("\nQual o valor que essa mete deve atingir? (Ex: digite 190000 para $1900.00 CAD: ");
                 scanf("%d", &valor_meta);
                 printf("Meta '%s' cadastrada com valor de $%i.%02i CAD.\n", nome_meta, valor_meta / 100, valor_meta % 100);
             }
@@ -200,7 +241,7 @@ int main() {
             getchar();  // Limpar buffer
             getchar();  // Esperar Enter do usuário
             break;
-        case 4:
+        case 4: /*_______________________________________(Gerar Relatório)_______________________________________*/
             /*O sistema deve gerar relatórios que permitem visualizar:
             ■ Movimentação diária: lista de todas as transações de um dia específico.
             ■ Movimentação mensal: lista de todas as transações de um mês específico.
@@ -210,10 +251,8 @@ int main() {
                 exibirRelatorio(receita_total, despesa_total);
                 printf("Digite [ 1 ] para Continuar || Digite [ 2 ] para Sair: ");
                 scanf("%d", &subOpcao);
-            }
-            break;
-             
-        case 5:        
+            } break;
+        case 5: /*_______________________________________(Alterar Idioma) _______________________________________*/        
             limparTela();
             printf("    [ 1 ] Francais\n");
             printf("    [ 2 ] English\n");
@@ -222,7 +261,7 @@ int main() {
             
             if(option == 1) { french(); break;}  // Chama diretamente a função french() para exibir o menu em francês
             else if(option == 2){ english(); break;} // Chama diretamente a função english() para exibir o menu em inglês
-        case 6:
+        case 6: 
             limparTela();
             printf("\n+=+=+=+=+=+=+=+=+=+=+=+=+=\nAguarde...\n");
             sleep(3);
@@ -233,11 +272,10 @@ int main() {
         default:
             limparTela();
             printf("OPCAO INVALIDA!\a");
-        }
-    
+        }    
     }while (opcao != 6);
-    return 0;
-}
+    return 0; 
+} /********************************************[ FIM DO MAIN ]***********************************************************************/
 // Função que limpa a tela
 void limparTela() {
     #ifdef _WIN32
@@ -311,23 +349,20 @@ void exibirRelatorio(int receita_total, int despesa_total) {
 // Função para ler o valor de uma transação
 int lerValor(const char* tipo, enum Idioma idioma) {
     int valor;
-        //se o valor for negativo, retorna -1 para indicar cancelamento
-        if (valor <= 0) return -1;
 
-            // Mostra mensagem de acordo com o idioma
-        if (idioma == PORTUGUES) {
-            printf("Digite o valor da %s (ex: 750 para $7.50 CAD): ", tipo);
-            scanf("%d", &valor);
-        } else if (idioma == FRANCES) {
-            printf("Digitez la valeur de la %s (ex: 750 pour $7.50 CAD): ", tipo);
-            scanf("%d", &valor);
-        } else if (idioma == INGLES) {
-            printf("Write the value of %s (ex: 750 to $7.50 CAD): ", tipo);
-            scanf("%d", &valor);
-        }
-
-    return valor;
+    // Mostra mensagem de acordo com o idioma
+    if (idioma == PORTUGUES) {
+        printf("Digite o valor da %s ou um número negativo para voltar (ex: 750 para $7.50 CAD): ", tipo);
+    } else if (idioma == FRANCES) {
+        printf("Digitez la valeur de la %s (ex: 750 pour $7.50 CAD): ", tipo);
+    } else if (idioma == INGLES) {
+        printf("Write the value of %s (ex: 750 to $7.50 CAD): ", tipo);
     }
+    scanf("%d", &valor);
+    // Verificação do valor após a leitura
+    if (valor <= 0) return -1;
+    return valor;
+}
 int lerEscolha(enum Idioma idioma) {
     int subOpcao = 0, leitura = 0;
 
@@ -340,9 +375,7 @@ int lerEscolha(enum Idioma idioma) {
         } else if (idioma == INGLES) {
             printf("Press [ 1 ] to Continue || Press [ 2 ] to Exit: ");
         }
-
         leitura = scanf("%i", &subOpcao);
-
         // Validação
         if (leitura != 1 || (subOpcao != 1 && subOpcao != 2)) {
             if (idioma == PORTUGUES) printf("Opcao invalida. Tente novamente.\n");
@@ -408,8 +441,7 @@ void french() {
                 printf("  \n");
             } else {
                 printf("Option invalide!\n\a");
-            }
-    
+            }    
             subOpcao = lerEscolha(FRANCES);
         }
             break;
@@ -432,7 +464,6 @@ void french() {
             break;
         default:
             printf("Option invalide!\n\a");
-            
         }
     }
 }
@@ -447,7 +478,6 @@ void english() {
         "Save & Exit"
     };
     int num_opcoes = 6;
-    
     int opcao = 0;
     while (opcao != 6) {
         exibirMenu(titulo, opcoes, num_opcoes);  // Chama a função exibirMenu com as opções em inglês
